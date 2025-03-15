@@ -33,7 +33,7 @@ setInterval(() => {
 }, 600000);
 
 // 权限校验函数
-function checkAuth(req: NextRequest) {
+export function checkAuth(req: NextRequest) {
   let ip: any = "";
   if (req.headers.get("x-real-ip")) {
     ip = req.headers.get("x-real-ip");
@@ -104,7 +104,7 @@ function gptauth(reqInfo: any) {
 }
 
 // 日志记录函数
-function gptlog(reqInfo: any) {
+export function gptlog(reqInfo: any) {
   try {
     if (!reqInfo?.token || !reqInfo?.messages) return;
     let _buffer = new Uint8Array(JSON.parse(reqInfo.messages)).buffer;

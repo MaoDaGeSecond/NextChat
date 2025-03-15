@@ -9,6 +9,7 @@ import { prettyObject } from "@/app/utils/format";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/api/auth";
 import { isModelNotavailableInServer } from "@/app/utils/model";
+import { checkAuth, gptlog } from "@/app/api/common";
 
 const serverConfig = getServerSideConfig();
 
@@ -20,6 +21,29 @@ export async function handle(
 
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
+  }
+
+  let result: any = {
+    code: 500,
+    msg: "权限验证失败！",
+  };
+  try {
+    result = checkAuth(req);
+  } catch (error) {}
+
+  if (200 != result?.code)
+    return NextResponse.json(
+      {
+        error: true,
+        message: result?.msg || `权限验证失败！`,
+      },
+      {
+        status: result?.code || 401,
+      },
+    );
+
+  if (result?.reqInfo) {
+    gptlog(result.reqInfo);
   }
 
   const authResult = auth(req, ModelProvider.DeepSeek);
