@@ -6,6 +6,7 @@ import {
   REQUEST_TIMEOUT_MS,
 } from "@/app/constant";
 import { useAccessStore, useAppConfig, useChatStore } from "@/app/store";
+import { addReqInfoToHeaders } from "@/app/utils/reqInfo";
 
 import {
   ChatOptions,
@@ -104,7 +105,7 @@ export class SparkApi implements LLMApi {
         method: "POST",
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        headers: getHeaders(),
+        headers: addReqInfoToHeaders(getHeaders()),
       };
 
       // Make a fetch request

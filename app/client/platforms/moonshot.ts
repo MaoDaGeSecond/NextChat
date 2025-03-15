@@ -10,10 +10,11 @@ import {
   useAccessStore,
   useAppConfig,
   useChatStore,
-  ChatMessageTool,
   usePluginStore,
+  ChatMessageTool,
 } from "@/app/store";
-import { stream } from "@/app/utils/chat";
+import { streamWithThink } from "@/app/utils/chat";
+import { addReqInfoToHeaders } from "@/app/utils/reqInfo";
 import {
   ChatOptions,
   getHeaders,
@@ -104,7 +105,7 @@ export class MoonshotApi implements LLMApi {
         method: "POST",
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        headers: getHeaders(),
+        headers: addReqInfoToHeaders(getHeaders()),
       };
 
       // make a fetch request
@@ -119,10 +120,10 @@ export class MoonshotApi implements LLMApi {
           .getAsTools(
             useChatStore.getState().currentSession().mask?.plugin || [],
           );
-        return stream(
+        return streamWithThink(
           chatPath,
           requestPayload,
-          getHeaders(),
+          addReqInfoToHeaders(getHeaders()),
           tools as any,
           funcs,
           controller,
@@ -155,7 +156,10 @@ export class MoonshotApi implements LLMApi {
                 runTools[index]["function"]["arguments"] += args;
               }
             }
-            return choices[0]?.delta?.content;
+            return {
+              isThinking: false,
+              content: choices[0]?.delta?.content,
+            };
           },
           // processToolMessage, include tool_calls message and tool call results
           (

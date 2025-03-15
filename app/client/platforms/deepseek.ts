@@ -9,6 +9,7 @@ import {
   usePluginStore,
 } from "@/app/store";
 import { streamWithThink } from "@/app/utils/chat";
+import { addReqInfoToHeaders } from "@/app/utils/reqInfo";
 import {
   ChatOptions,
   getHeaders,
@@ -127,7 +128,7 @@ export class DeepSeekApi implements LLMApi {
         method: "POST",
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        headers: getHeaders(),
+        headers: addReqInfoToHeaders(getHeaders()),
       };
 
       // make a fetch request
@@ -145,7 +146,7 @@ export class DeepSeekApi implements LLMApi {
         return streamWithThink(
           chatPath,
           requestPayload,
-          getHeaders(),
+          addReqInfoToHeaders(getHeaders()),
           tools as any,
           funcs,
           controller,

@@ -28,6 +28,7 @@ import {
   isVisionModel,
 } from "@/app/utils";
 import { fetch } from "@/app/utils/stream";
+import { addReqInfoToHeaders } from "@/app/utils/reqInfo";
 
 export interface OpenAIListModelResponse {
   object: string;
@@ -137,7 +138,7 @@ export class QwenApi implements LLMApi {
 
     try {
       const headers = {
-        ...getHeaders(),
+        ...addReqInfoToHeaders(getHeaders()),
         "X-DashScope-SSE": shouldStream ? "enable" : "disable",
       };
 

@@ -10,10 +10,11 @@ import {
   useAccessStore,
   useAppConfig,
   useChatStore,
-  ChatMessageTool,
   usePluginStore,
+  ChatMessageTool,
 } from "@/app/store";
 import { preProcessImageContent, streamWithThink } from "@/app/utils/chat";
+import { addReqInfoToHeaders } from "@/app/utils/reqInfo";
 import {
   ChatOptions,
   getHeaders,
@@ -129,7 +130,7 @@ export class SiliconflowApi implements LLMApi {
         method: "POST",
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        headers: getHeaders(),
+        headers: addReqInfoToHeaders(getHeaders()),
       };
 
       // console.log(chatPayload);
@@ -149,7 +150,7 @@ export class SiliconflowApi implements LLMApi {
         return streamWithThink(
           chatPath,
           requestPayload,
-          getHeaders(),
+          addReqInfoToHeaders(getHeaders()),
           tools as any,
           funcs,
           controller,
@@ -259,7 +260,7 @@ export class SiliconflowApi implements LLMApi {
     const res = await fetch(this.path(SiliconFlow.ListModelPath), {
       method: "GET",
       headers: {
-        ...getHeaders(),
+        ...addReqInfoToHeaders(getHeaders()),
       },
     });
 

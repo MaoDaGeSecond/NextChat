@@ -24,6 +24,7 @@ import {
 import { RequestPayload } from "./openai";
 import { fetch } from "@/app/utils/stream";
 import { preProcessImageContent } from "@/app/utils/chat";
+import { addReqInfoToHeaders } from "@/app/utils/reqInfo";
 
 interface BasePayload {
   model: string;
@@ -185,7 +186,7 @@ export class ChatGLMApi implements LLMApi {
         method: "POST",
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        headers: getHeaders(),
+        headers: addReqInfoToHeaders(getHeaders()),
       };
 
       const requestTimeoutId = setTimeout(
@@ -214,7 +215,7 @@ export class ChatGLMApi implements LLMApi {
         return stream(
           path,
           requestPayload,
-          getHeaders(),
+          addReqInfoToHeaders(getHeaders()),
           tools as any,
           funcs,
           controller,

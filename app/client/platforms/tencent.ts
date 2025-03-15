@@ -1,6 +1,7 @@
 "use client";
 import { ApiPath, TENCENT_BASE_URL } from "@/app/constant";
 import { useAccessStore, useAppConfig, useChatStore } from "@/app/store";
+import { addReqInfoToHeaders } from "@/app/utils/reqInfo";
 
 import {
   ChatOptions,
@@ -133,7 +134,7 @@ export class HunyuanApi implements LLMApi {
         method: "POST",
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        headers: getHeaders(),
+        headers: addReqInfoToHeaders(getHeaders()),
       };
 
       // make a fetch request

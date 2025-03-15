@@ -1,4 +1,4 @@
-import { Anthropic, ApiPath } from "@/app/constant";
+import { Anthropic, ApiPath, ANTHROPIC_BASE_URL } from "@/app/constant";
 import { ChatOptions, getHeaders, LLMApi, SpeechOptions } from "../api";
 import {
   useAccessStore,
@@ -8,12 +8,12 @@ import {
   ChatMessageTool,
 } from "@/app/store";
 import { getClientConfig } from "@/app/config/client";
-import { ANTHROPIC_BASE_URL } from "@/app/constant";
 import { getMessageTextContent, isVisionModel } from "@/app/utils";
-import { preProcessImageContent, stream } from "@/app/utils/chat";
+import { preProcessImageContent, streamWithThink } from "@/app/utils/chat";
 import { cloudflareAIGatewayUrl } from "@/app/utils/cloudflare";
 import { RequestPayload } from "./openai";
 import { fetch } from "@/app/utils/stream";
+import { addReqInfoToHeaders } from "@/app/utils/reqInfo";
 
 export type MultiBlockContent = {
   type: "image" | "text";
@@ -203,13 +203,13 @@ export class ClaudeApi implements LLMApi {
         .getAsTools(
           useChatStore.getState().currentSession().mask?.plugin || [],
         );
-      return stream(
+      return streamWithThink(
         path,
         requestBody,
-        {
+        addReqInfoToHeaders({
           ...getHeaders(),
           "anthropic-version": accessStore.anthropicApiVersion,
-        },
+        }),
         // @ts-ignore
         tools.map((tool) => ({
           name: tool?.function?.name,
@@ -260,7 +260,10 @@ export class ClaudeApi implements LLMApi {
             runTools[index]["function"]["arguments"] +=
               chunkJson?.delta?.partial_json;
           }
-          return chunkJson?.delta?.text;
+          return {
+            isThinking: false,
+            content: chunkJson?.delta?.text,
+          };
         },
         // processToolMessage, include tool_calls message and tool call results
         (

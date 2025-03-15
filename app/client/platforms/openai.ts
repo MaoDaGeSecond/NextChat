@@ -25,6 +25,7 @@ import {
 } from "@/app/utils/chat";
 import { cloudflareAIGatewayUrl } from "@/app/utils/cloudflare";
 import { ModelSize, DalleQuality, DalleStyle } from "@/app/typing";
+import { addReqInfoToHeaders } from "@/app/utils/reqInfo";
 
 import {
   ChatOptions,
@@ -160,12 +161,15 @@ export class ChatGPTApi implements LLMApi {
     options.onController?.(controller);
 
     try {
+      // 获取headers并添加reqInfo整个对象
+      const headers = addReqInfoToHeaders(getHeaders());
+
       const speechPath = this.path(OpenaiPath.SpeechPath);
       const speechPayload = {
         method: "POST",
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        headers: getHeaders(),
+        headers: headers,
       };
 
       // make a fetch request
@@ -294,10 +298,14 @@ export class ChatGPTApi implements LLMApi {
             useChatStore.getState().currentSession().mask?.plugin || [],
           );
         // console.log("getAsTools", tools, funcs);
+
+        // 获取headers并添加reqInfo整个对象
+        const headers = addReqInfoToHeaders(getHeaders());
+
         streamWithThink(
           chatPath,
           requestPayload,
-          getHeaders(),
+          headers,
           tools as any,
           funcs,
           controller,
@@ -386,11 +394,14 @@ export class ChatGPTApi implements LLMApi {
           options,
         );
       } else {
+        // 获取headers并添加reqInfo整个对象
+        const headers = addReqInfoToHeaders(getHeaders());
+
         const chatPayload = {
           method: "POST",
           body: JSON.stringify(requestPayload),
           signal: controller.signal,
-          headers: getHeaders(),
+          headers: headers,
         };
 
         // make a fetch request
@@ -423,6 +434,9 @@ export class ChatGPTApi implements LLMApi {
     const startDate = formatDate(startOfMonth);
     const endDate = formatDate(new Date(Date.now() + ONE_DAY));
 
+    // 获取headers并添加reqInfo整个对象
+    const headers = addReqInfoToHeaders(getHeaders());
+
     const [used, subs] = await Promise.all([
       fetch(
         this.path(
@@ -430,12 +444,12 @@ export class ChatGPTApi implements LLMApi {
         ),
         {
           method: "GET",
-          headers: getHeaders(),
+          headers: headers,
         },
       ),
       fetch(this.path(OpenaiPath.SubsPath), {
         method: "GET",
-        headers: getHeaders(),
+        headers: headers,
       }),
     ]);
 
@@ -482,11 +496,12 @@ export class ChatGPTApi implements LLMApi {
       return DEFAULT_MODELS.slice();
     }
 
+    // 获取headers并添加reqInfo整个对象
+    const headers = addReqInfoToHeaders(getHeaders());
+
     const res = await fetch(this.path(OpenaiPath.ListModelPath), {
       method: "GET",
-      headers: {
-        ...getHeaders(),
-      },
+      headers: headers,
     });
 
     const resJson = (await res.json()) as OpenAIListModelResponse;

@@ -4,159 +4,10 @@ import { OPENAI_BASE_URL, ServiceProvider } from "../constant";
 import { cloudflareAIGatewayUrl } from "../utils/cloudflare";
 import { getModelProvider, isModelNotavailableInServer } from "../utils/model";
 
-// 译达通鉴权相关变量
-const AuthInfo: any = {},
-  // baseURL = "https://edatone.com/api/v1";
-  baseURL = "http://test.edatone.com.cn/api/v1";
-let blacklist: string[] = [];
-
 const serverConfig = getServerSideConfig();
-
-// 加载黑名单
-function loadBlacklist() {
-  fetch(`${baseURL}/trans/gptbl`, {
-    method: "get",
-  })
-    .then((res) => {
-      res
-        .json()
-        .then((data) => {
-          blacklist = data?.uid || [];
-        })
-        .catch(() => {});
-    })
-    .catch(() => {});
-}
-loadBlacklist();
-setInterval(() => {
-  loadBlacklist();
-}, 600000);
-
-// 权限校验函数
-function checkAuth(req: NextRequest) {
-  let ip: any = "";
-  if (req.headers.get("x-real-ip")) {
-    ip = req.headers.get("x-real-ip");
-  } else if (req.headers.get("x-forwarded-for")) {
-    ip = req.headers.get("x-forwarded-for");
-  } else ip = req.nextUrl.hostname;
-
-  let infoStr = req.headers.get("reqInfo");
-  let reqInfo: any = {};
-  if (infoStr) reqInfo = JSON.parse(infoStr);
-  reqInfo.ip = ip;
-
-  if (!reqInfo.token)
-    return {
-      code: 599,
-      msg: "请到译达通官网：https://edatone.com，更新客户端到1.4.3及以上版本使用",
-    };
-
-  let auth = AuthInfo[reqInfo.token];
-  if (auth) {
-    if (auth.enable) {
-      if (blacklist.includes(auth.userId))
-        return {
-          code: 500,
-          msg: "当前用户GPT额度不足，请联系译达通客服~",
-        };
-      return {
-        reqInfo,
-        code: 200,
-        msg: "验证成功。",
-      };
-    }
-  }
-
-  gptauth(reqInfo);
-  return {
-    reqInfo,
-    code: 200,
-    msg: "验证成功。",
-  };
-}
-
-// 用户验证函数
-function gptauth(reqInfo: any) {
-  fetch(`${baseURL}/trans/gptauth`, {
-    method: "get",
-    headers: {
-      "x-token": reqInfo.token || "",
-    },
-  })
-    .then((res) => {
-      res
-        .json()
-        .then((data) => {
-          data = "object" == typeof data ? data : { msg: data };
-          data.code = res.status;
-          if (200 == data.code && data.userId) {
-            data.reqInfo = reqInfo;
-            AuthInfo[reqInfo.token] = {
-              enable: true,
-              userId: data.userId,
-            };
-          }
-        })
-        .catch(() => {});
-    })
-    .catch(() => {});
-}
-
-// 日志记录函数
-function gptlog(reqInfo: any) {
-  try {
-    if (!reqInfo?.token || !reqInfo?.messages) return;
-    let _buffer = new Uint8Array(JSON.parse(reqInfo.messages)).buffer;
-    reqInfo.messages = arrayBufferToString(_buffer);
-    let token = reqInfo.token;
-    delete reqInfo.token;
-    fetch(`${baseURL}/trans/gptlogs`, {
-      method: "post",
-      headers: {
-        "x-token": token,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(reqInfo),
-    })
-      .then(() => {})
-      .catch(() => {});
-  } catch (error) {}
-}
-
-function arrayBufferToString(buffer: ArrayBuffer) {
-  try {
-    var decoder = new TextDecoder("utf-8");
-    return decoder.decode(buffer);
-  } catch (e) {
-    return "参数处理异常！";
-  }
-}
 
 export async function requestOpenai(req: NextRequest) {
   const controller = new AbortController();
-
-  // 添加译达通权限校验
-  let result: any = {
-    code: 500,
-    msg: "权限验证失败！",
-  };
-  try {
-    result = checkAuth(req);
-  } catch (error) {}
-
-  if (200 != result?.code)
-    return NextResponse.json(
-      {
-        error: true,
-        message: result?.msg || `权限验证失败！`,
-      },
-      {
-        status: result?.code || 401,
-      },
-    );
-
-  req.headers.delete("reqInfo");
 
   const isAzure = req.nextUrl.pathname.includes("azure/deployments");
 
@@ -235,11 +86,6 @@ export async function requestOpenai(req: NextRequest) {
         path = path.replaceAll(modelName, realDeployName);
       }
     }
-  }
-
-  // 在发送请求前记录日志
-  if (result?.reqInfo) {
-    gptlog(result.reqInfo);
   }
 
   const fetchUrl = cloudflareAIGatewayUrl(`${baseUrl}/${path}`);

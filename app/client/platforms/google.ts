@@ -17,6 +17,7 @@ import {
 import { stream } from "@/app/utils/chat";
 import { getClientConfig } from "@/app/config/client";
 import { GEMINI_BASE_URL } from "@/app/constant";
+import { addReqInfoToHeaders } from "@/app/utils/reqInfo";
 
 import {
   getMessageTextContent,
@@ -195,7 +196,7 @@ export class GeminiProApi implements LLMApi {
         method: "POST",
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        headers: getHeaders(),
+        headers: addReqInfoToHeaders(getHeaders()),
       };
 
       const isThinking = options.config.model.includes("-thinking");
@@ -214,7 +215,7 @@ export class GeminiProApi implements LLMApi {
         return stream(
           chatPath,
           requestPayload,
-          getHeaders(),
+          addReqInfoToHeaders(getHeaders()),
           // @ts-ignore
           tools.length > 0
             ? // @ts-ignore

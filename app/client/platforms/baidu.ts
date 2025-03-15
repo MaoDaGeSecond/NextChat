@@ -2,6 +2,7 @@
 import { ApiPath, Baidu, BAIDU_BASE_URL } from "@/app/constant";
 import { useAccessStore, useAppConfig, useChatStore } from "@/app/store";
 import { getAccessToken } from "@/app/utils/baidu";
+import { addReqInfoToHeaders } from "@/app/utils/reqInfo";
 
 import {
   ChatOptions,
@@ -144,7 +145,7 @@ export class ErnieApi implements LLMApi {
         method: "POST",
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        headers: getHeaders(),
+        headers: addReqInfoToHeaders(getHeaders()),
       };
 
       // make a fetch request

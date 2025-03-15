@@ -21,6 +21,7 @@ import { getTimeoutMSByModel } from "@/app/utils";
 import { preProcessImageContent } from "@/app/utils/chat";
 import { RequestPayload } from "./openai";
 import { fetch } from "@/app/utils/stream";
+import { addReqInfoToHeaders } from "@/app/utils/reqInfo";
 
 export class XAIApi implements LLMApi {
   private disableListModels = true;
@@ -98,7 +99,7 @@ export class XAIApi implements LLMApi {
         method: "POST",
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        headers: getHeaders(),
+        headers: addReqInfoToHeaders(getHeaders()),
       };
 
       // make a fetch request
@@ -116,7 +117,7 @@ export class XAIApi implements LLMApi {
         return stream(
           chatPath,
           requestPayload,
-          getHeaders(),
+          addReqInfoToHeaders(getHeaders()),
           tools as any,
           funcs,
           controller,

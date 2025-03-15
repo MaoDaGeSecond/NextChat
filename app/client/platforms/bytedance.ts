@@ -4,9 +4,11 @@ import {
   useAccessStore,
   useAppConfig,
   useChatStore,
-  ChatMessageTool,
   usePluginStore,
+  ChatMessageTool,
 } from "@/app/store";
+import { streamWithThink } from "@/app/utils/chat";
+import { addReqInfoToHeaders } from "@/app/utils/reqInfo";
 
 import {
   ChatOptions,
@@ -17,7 +19,6 @@ import {
   SpeechOptions,
 } from "../api";
 
-import { streamWithThink } from "@/app/utils/chat";
 import { getClientConfig } from "@/app/config/client";
 import { preProcessImageContent } from "@/app/utils/chat";
 import {
@@ -122,7 +123,7 @@ export class DoubaoApi implements LLMApi {
         method: "POST",
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        headers: getHeaders(),
+        headers: addReqInfoToHeaders(getHeaders()),
       };
 
       // make a fetch request
@@ -140,7 +141,7 @@ export class DoubaoApi implements LLMApi {
         return streamWithThink(
           chatPath,
           requestPayload,
-          getHeaders(),
+          addReqInfoToHeaders(getHeaders()),
           tools as any,
           funcs,
           controller,
